@@ -34,3 +34,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# sanity
+/form-submit-test/config
+/form-submit-test/dist
+/form-submit-test/node_modules
