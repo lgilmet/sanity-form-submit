@@ -1,9 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 html,
 body {
   padding: 0;
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
     Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+}
+
+form {
+  width: 400px;
+  margin: 30px auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+label {
+  display: block;
+  margin-top: 10px;
+}
+
+/* button that is disabled */
+button:disabled {
+  opacity: 0.5;
+}
+
+label > span {
+  display: block;
+  margin-bottom: 5px;
 }
 
 a {
