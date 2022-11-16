@@ -4,9 +4,9 @@ import { useState } from "react";
 import { client } from "../sanity";
 
 export default function Home() {
-  const [imagesAssets1, setImagesAssets1] = useState(null);
-  const [imagesAssets2, setImagesAssets2] = useState(null);
-  const [imagesAssets3, setImagesAssets3] = useState(null);
+  const [imagesAssets1, setImagesAssets1] = useState("");
+  const [imagesAssets2, setImagesAssets2] = useState({});
+  const [imagesAssets3, setImagesAssets3] = useState({});
 
   const applicationSchema = Yup.object().shape({
     name: Yup.string().required("Required"),
@@ -30,16 +30,19 @@ export default function Home() {
     image3: Yup.string().required("Required"),
   });
 
-  function uploadImageToSanity(file) {
-    console.log(file.currentTarget);
-    const imageFile = file[0];
-    if (!imageFile) return null;
+  function uploadImageToSanity(input) {
+    const selectedImage = input?.target?.files[0];
+    if (!selectedImage) return null;
+
     client.assets
-      .upload("image", imageFile, {
-        ...imageFile,
+      .upload("image", selectedImage, {
+        ...selectedImage,
       })
       .then((imageAsset) => {
         console.log("Image asset", imageAsset.assetId);
+
+        // trying to set the value of the input to the imageAsset.assetId
+        console.log("Asset", imagesAssets1);
       })
       .catch((error) => {
         console.error("Upload failed:", error.message);
@@ -95,10 +98,8 @@ export default function Home() {
               <input
                 type="file"
                 name="image1"
-                data-prop={setImagesAssets1}
-                onChange={(e) => {
-                  uploadImageToSanity(e);
-                }}
+                value={imagesAssets1}
+                onChange={uploadImageToSanity}
               />
             </label>
             <label>
