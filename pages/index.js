@@ -1,48 +1,50 @@
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { client } from "../sanity";
+
+const applicationSchema = Yup.object().shape({
+  name: Yup.string().required("Required"),
+  email: Yup.string().email("Invalid email").required("Required"),
+  address: Yup.string().required("Required"),
+  apt: Yup.string(),
+  city: Yup.string().required("Required"),
+  state: Yup.string().required("Required"),
+  zip: Yup.string().required("Required"),
+  phone: Yup.string().required("Required"),
+  gender: Yup.string().required("Required"),
+  pronouns: Yup.string().required("Required"),
+  height: Yup.string().required("Required"),
+  hair: Yup.string().required("Required"),
+  eyes: Yup.string().required("Required"),
+  instagram: Yup.string().required("Required"),
+  talents: Yup.string().required("Required"),
+  message: Yup.string().required("Required"),
+  image1: Yup.string().required("Required"),
+  image2: Yup.string().required("Required"),
+  image3: Yup.string().required("Required"),
+});
 
 export default function Home() {
   const [imagesAssets1, setImagesAssets1] = useState("");
   const [imagesAssets2, setImagesAssets2] = useState({});
   const [imagesAssets3, setImagesAssets3] = useState({});
+  const inputImg1Ref = useRef(null);
 
-  const applicationSchema = Yup.object().shape({
-    name: Yup.string().required("Required"),
-    email: Yup.string().email("Invalid email").required("Required"),
-    address: Yup.string().required("Required"),
-    apt: Yup.string(),
-    city: Yup.string().required("Required"),
-    state: Yup.string().required("Required"),
-    zip: Yup.string().required("Required"),
-    phone: Yup.string().required("Required"),
-    gender: Yup.string().required("Required"),
-    pronouns: Yup.string().required("Required"),
-    height: Yup.string().required("Required"),
-    hair: Yup.string().required("Required"),
-    eyes: Yup.string().required("Required"),
-    instagram: Yup.string().required("Required"),
-    talents: Yup.string().required("Required"),
-    message: Yup.string().required("Required"),
-    image1: Yup.string().required("Required"),
-    image2: Yup.string().required("Required"),
-    image3: Yup.string().required("Required"),
-  });
+  function uploadImageToSanity(setter, inputRef) {
+    const selectedImage = inputRef.current.files[0];
 
-  function uploadImageToSanity(input) {
-    const selectedImage = input?.target?.files[0];
     if (!selectedImage) return null;
-
     client.assets
       .upload("image", selectedImage, {
         ...selectedImage,
       })
       .then((imageAsset) => {
-        console.log("Image asset", imageAsset.assetId);
-
-        // trying to set the value of the input to the imageAsset.assetId
-        console.log("Asset", imagesAssets1);
+        console.log(imageAsset._id);
+        setter(imageAsset._id);
+        // this is set to the old value of imagesAssets1
+        // how to set it to the new value of imagesAssets1?
+        console.log("imagesAssets1", imagesAssets1);
       })
       .catch((error) => {
         console.error("Upload failed:", error.message);
@@ -73,14 +75,22 @@ export default function Home() {
         }}
         validationSchema={applicationSchema}
         onSubmit={async (values) => {
+          console.log("on submit");
           const doc = {
             _type: "application",
             ...values,
+            // image1: imagesAssets1,
           };
+          console.log("submitting", doc);
 
-          client.create(doc).then((res) => {
-            console.log(`An application was submitted with id : ${res._id}`);
-          });
+          client
+            .create(doc)
+            .then((res) => {
+              console.log(`An application was submitted with id : ${res._id}`);
+            })
+            .catch((err) => {
+              console.error("An error occurred:", err);
+            });
         }}>
         {({
           values,
@@ -95,13 +105,15 @@ export default function Home() {
           <form onSubmit={handleSubmit}>
             <label>
               Upload image 1:
-              <input
-                type="file"
-                name="image1"
-                value={imagesAssets1}
-                onChange={uploadImageToSanity}
-              />
+              <input type="file" />
             </label>
+            {/* <button
+              type="button"
+              onClick={() =>
+                uploadImageToSanity(setImagesAssets1, inputImg1Ref)
+              }>
+              Upload
+            </button> */}
             <label>
               <span>Name</span>
               <Field name="name" label="name" />
