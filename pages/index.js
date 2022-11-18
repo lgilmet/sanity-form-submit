@@ -20,78 +20,109 @@ const applicationSchema = Yup.object().shape({
   instagram: Yup.string().required("Required"),
   talents: Yup.string().required("Required"),
   message: Yup.string().required("Required"),
-  image1: Yup.string().required("Required"),
-  image2: Yup.string().required("Required"),
-  image3: Yup.string().required("Required"),
+  faceCloseUp: Yup.object(),
+  waistUp: Yup.object(),
+  headToToes: Yup.object(),
 });
 
+const initialValues = {
+  name: "Name",
+  email: "name@email.com",
+  address: "Address",
+  apt: "Apt",
+  city: "City",
+  state: "State",
+  zip: "Zip",
+  phone: "333-333-3333",
+  gender: "any",
+  pronouns: "any",
+  height: "any",
+  hair: "any",
+  eyes: "blue",
+  instagram: "any",
+  talents: "any",
+  message: "Message",
+  faceCloseUp: {},
+  waistUp: {},
+  headToToe: {},
+};
+
 export default function Home() {
-  const [imagesAssets1, setImagesAssets1] = useState("");
-  const [imagesAssets2, setImagesAssets2] = useState({});
-  const [imagesAssets3, setImagesAssets3] = useState({});
   const inputImg1Ref = useRef(null);
+  const inputImg2Ref = useRef(null);
+  const inputImg3Ref = useRef(null);
 
-  function uploadImageToSanity(setter, inputRef) {
-    const selectedImage = inputRef.current.files[0];
+  function uploadImageToSanity() {
+    const inputRefs = [inputImg1Ref, inputImg2Ref, inputImg3Ref];
+    const imageFiles = inputRefs.map((ref) => ref?.current?.files[0]);
 
-    if (!selectedImage) return null;
-    client.assets
-      .upload("image", selectedImage, {
-        ...selectedImage,
+    console.log(imageFiles);
+    const promises = imageFiles.map((file) => {
+      if (file) {
+        return client.assets
+          .upload("image", file, {
+            ...file,
+          })
+          .then((asset) => {
+            return {
+              _type: "image",
+              asset: {
+                _type: "reference",
+                _ref: asset._id,
+              },
+            };
+          });
+      }
+    });
+
+    return Promise.all(promises);
+  }
+
+  async function submitForm(values) {
+    const images = await uploadImageToSanity();
+
+    if (images[0]) {
+      values.faceCloseUp = images[0];
+    } else if (values.faceCloseUp) {
+      delete values.faceCloseUp;
+    }
+    if (images[1]) {
+      values.waistUp = images[1];
+    } else if (values.waistUp) {
+      delete values.waistUp;
+    }
+    if (images[2]) {
+      values.headToToe = images[2];
+    } else if (values.headToToe) {
+      delete values.headToToe;
+    }
+
+    const doc = {
+      _type: "application",
+      ...values,
+    };
+    console.log("submitting", doc);
+
+    client
+      .create(doc)
+      .then((res) => {
+        console.log(`An application was submitted with id : ${res._id}`);
       })
-      .then((imageAsset) => {
-        console.log(imageAsset._id);
-        setter(imageAsset._id);
-        // this is set to the old value of imagesAssets1
-        // how to set it to the new value of imagesAssets1?
-        console.log("imagesAssets1", imagesAssets1);
-      })
-      .catch((error) => {
-        console.error("Upload failed:", error.message);
+      .catch((err) => {
+        console.error("An error occurred:", err);
       });
   }
 
   return (
     <>
       <Formik
-        initialValues={{
-          name: "Name",
-          email: "name@email.com",
-          address: "Address",
-          apt: "Apt",
-          city: "City",
-          state: "State",
-          zip: "Zip",
-          phone: "333-333-3333",
-          gender: "any",
-          pronouns: "any",
-          height: "any",
-          hair: "any",
-          eyes: "blue",
-          instagram: "any",
-          talents: "any",
-          message: "Message",
-          image1: "",
-        }}
+        initialValues={initialValues}
         validationSchema={applicationSchema}
         onSubmit={async (values) => {
-          console.log("on submit");
-          const doc = {
-            _type: "application",
-            ...values,
-            // image1: imagesAssets1,
-          };
-          console.log("submitting", doc);
-
-          client
-            .create(doc)
-            .then((res) => {
-              console.log(`An application was submitted with id : ${res._id}`);
-            })
-            .catch((err) => {
-              console.error("An error occurred:", err);
-            });
+          await submitForm(values);
         }}>
+        {/* what is this syntax?  */}
+
         {({
           values,
           errors,
@@ -100,20 +131,20 @@ export default function Home() {
           handleBlur,
           handleSubmit,
           isSubmitting,
-          /* and other goodies */
         }) => (
           <form onSubmit={handleSubmit}>
             <label>
               Upload image 1:
-              <input type="file" />
+              <input type="file" ref={inputImg1Ref} />
             </label>
-            {/* <button
-              type="button"
-              onClick={() =>
-                uploadImageToSanity(setImagesAssets1, inputImg1Ref)
-              }>
-              Upload
-            </button> */}
+            <label>
+              Upload image 2:
+              <input type="file" ref={inputImg2Ref} />
+            </label>
+            <label>
+              Upload image 3:
+              <input type="file" ref={inputImg3Ref} />
+            </label>
             <label>
               <span>Name</span>
               <Field name="name" label="name" />
@@ -199,7 +230,7 @@ export default function Home() {
               <Field name="message" type="text" />
               {errors.message && touched.message && <div>{errors.message}</div>}
             </label>
-
+            {isSubmitting && <div>Loading...</div>}
             <button type="submit" disabled={isSubmitting}>
               Submit
             </button>

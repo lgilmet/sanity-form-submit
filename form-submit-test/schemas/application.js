@@ -3,7 +3,6 @@ export default {
   title: "Application",
   type: "document",
   fields: [
-    // create fields for name, email, address, apt, city, state, zip, phone, gender, pronouns, height, hair, eyes, instagram, talents, message,
     {
       name: "name",
       title: "Name",
@@ -81,32 +80,23 @@ export default {
     },
     {
       name: "message",
-
       title: "Message",
-      type: "string",
+      type: "text",
     },
     {
-      name: "image1",
-      title: "Image 1",
+      name: "faceCloseUp",
+      title: "Face Close Up",
       type: "image",
     },
     {
-      name: "image2",
-      title: "Image 2",
+      name: "waistUp",
+      title: "Waist Up",
       type: "image",
-      asset: {
-        type: "reference",
-        to: [{ type: "sanity.imageAsset" }],
-      },
     },
     {
-      name: "image3",
-      title: "Image 3",
+      name: "headToToe",
+      title: "Head To Toe",
       type: "image",
-      asset: {
-        type: "reference",
-        to: [{ type: "sanity.imageAsset" }],
-      },
     },
   ],
 };
